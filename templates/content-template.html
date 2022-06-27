@@ -26,10 +26,10 @@
   </head>
   <body>
     <mbp:frameset>
-    {% for word, data in defs | dictsort %}
+    {% for word, defn in defs | dictsort %}
     <idx:entry name="default" scriptable="yes" spell="yes">
       <h5><dt><idx:orth>{{ word }}</idx:orth></dt></h5>
-      <dd> {{data.def}} <br> <i>lipu: {{data.book}}</i></dd>
+      <dd> {{defn}} </dd>
     </idx:entry>
     <hr/>
     {% endfor %}
