@@ -4,67 +4,76 @@ import os
 import subprocess
 import json
 import argparse
-# shell for this code: https://code-maven.com/minimal-example-generating-html-with-python-jinja
+# code for deploying templates: https://code-maven.com/minimal-example-generating-html-with-python-jinja
 
 # parse args for language
 parser = argparse.ArgumentParser(description="create a Toki Pona dictionary mobi for use in kindles")
-parser.add_argument("-l", "--lang", help="the short id for the output language of the dictionary, as listed in the linku data")
+parser.add_argument("-a", "--all", help="compile dictionaries for all languages available", action="store_true")
+parser.add_argument("lang", help="the short id for the output language of the dictionary, as listed in the linku data", default=["en"], nargs="*")
+args = parser.parse_args()
 
+#get the Linku
 response = requests.get("https://lipu-linku.github.io/jasima/data.json")
 linku = json.loads(response.content)
 
-args = parser.parse_args()
-if not args.lang:
-    LANG_ID = "en"
-else:
-    LANG_ID = args.lang
-
-if LANG_ID not in linku["languages"].keys():
-    print("Language not recognized. Be sure to use the correct language id.")
-    quit()
-
-
+# set up
 root = os.path.dirname(os.path.abspath(__file__))
 templates_dir = os.path.join(root, 'templates')
-env = Environment( loader = FileSystemLoader(templates_dir) )
-template = env.get_template("cover-template.html")
+env = Environment( loader = FileSystemLoader(templates_dir))
 
-# create cover from template
-# https://stackoverflow.com/questions/22181944/using-utf-8-characters-in-a-jinja2-template
-filename = os.path.join(root, "dict-files", LANG_ID, "cover.html")
-os.makedirs(os.path.dirname(filename), exist_ok=True)
-with open(filename, 'wb') as fh:
-    output = template.render(lang = linku["languages"][LANG_ID]["name_toki_pona"])
-    fh.write(output.encode("utf-8"))
+if args.all:
+    languages = linku["languages"].keys()
+else:
+    languages = args.lang
 
-# create dictionary content from template
-defs = {}
-for word, data in linku["data"].items():
-    if LANG_ID in data["def"]:
-        defn = data["def"][LANG_ID]
-    else:
-        # TODO: This should probably be translated, but I don't know any language other than English
-        defn = "No definition found in your language"
-    defs[word] = bytes(defn, "utf-8").decode("utf-8", "ignore")
 
-template = env.get_template("content-template.html")
-filename = os.path.join(root, "dict-files", LANG_ID, "content.html")
-with open(filename, "wb") as fh:
-    output = template.render(defs = defs)
-    fh.write(output.encode("utf-8"))
+for LANG_ID in languages:
+    if LANG_ID not in linku["languages"].keys():
+       print(f"Language id '{LANG_ID}' not recognized. run lang_table_gen.py and check supported-languages.html for valid language ids.")
+       continue
 
-# create copyright/credits page
-template = env.get_template("copyright.html")
-filename = os.path.join(root, "dict-files", LANG_ID, "copyright.html")
-with open(filename, "w") as fh:
-    fh.write(template.render())
+    id_long = linku["languages"][LANG_ID]["id_long"]
+     # create cover from template
+    template = env.get_template("cover-template.html")
+    filename = os.path.join(root, "dict-files", id_long, "cover.html")
+    # https://stackoverflow.com/questions/12517451/automatically-creating-directories-with-file-output
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    with open(filename, 'wb') as fh:
+        output = template.render(lang = linku["languages"][LANG_ID]["name_toki_pona"])
+        # https://stackoverflow.com/questions/22181944/using-utf-8-characters-in-a-jinja2-template
+        fh.write(output.encode("utf-8"))
 
-# create opf file from template
-template = env.get_template("book-template.opf")
-filename = os.path.join(root, "dict-files", LANG_ID, "tok-" + LANG_ID + ".opf")
-with open(filename, "w") as fh:
-    fh.write(template.render(
-        lang_tp = linku["languages"][LANG_ID]["name_toki_pona"],
-        lang_id = LANG_ID
-    ))
+    # create dictionary content from template
+    defs = {}
+    for word, data in linku["data"].items():
+        if LANG_ID in data["def"]:
+            defn = data["def"][LANG_ID]
+        else:
+            # TODO: This should probably be translated, but I don't know any language other than English
+            defn = "No definition found in your language"
+        defs[word] = bytes(defn, "utf-8").decode("utf-8", "ignore")
+
+    template = env.get_template("content-template.html")
+    filename = os.path.join(root, "dict-files", id_long, "content.html")
+    with open(filename, "wb") as fh:
+        output = template.render(defs = defs)
+        fh.write(output.encode("utf-8"))
+
+    # create copyright/credits page
+    template = env.get_template("copyright.html")
+    filename = os.path.join(root, "dict-files", id_long, "copyright.html")
+    with open(filename, "w") as fh:
+        fh.write(template.render())
+
+    # create opf file from template
+    template = env.get_template("book-template.opf")
+    filename = os.path.join(root, "dict-files", id_long, "tok-" + LANG_ID + ".opf")
+    with open(filename, "w") as fh:
+        fh.write(template.render(
+            lang_tp = linku["languages"][LANG_ID]["name_toki_pona"],
+            lang_id = LANG_ID
+        ))
+
+    # now compile the mobi file
+    subprocess.run(["kindlegen", filename])
 

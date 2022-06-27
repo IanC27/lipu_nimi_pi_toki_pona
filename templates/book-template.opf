@@ -3,7 +3,7 @@
   <metadata>
     <dc:title>lipu nimi pi toki pona tawa {{ lang_tp }}</dc:title>
     <dc:creator opf:role="aut">jan Ijen</dc:creator>
-    <dc:language>{{lang_id}}</dc:language>
+    <dc:language>en</dc:language>
     <meta name="cover" content="my-cover-image" />
     <x-metadata>
       <DictionaryInLanguage>tok</DictionaryInLanguage>
