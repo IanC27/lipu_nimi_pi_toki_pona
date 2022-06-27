@@ -51,7 +51,9 @@ for LANG_ID in languages:
         else:
             # TODO: This should probably be translated, but I don't know any language other than English
             defn = "No definition found in your language"
-        defs[word] = bytes(defn, "utf-8").decode("utf-8", "ignore")
+        data["def"] = bytes(defn, "utf-8").decode("utf-8", "ignore")
+            
+        defs[word] = data
 
     template = env.get_template("content-template.html")
     filename = os.path.join(root, "dict-files", id_long, "content.html")
