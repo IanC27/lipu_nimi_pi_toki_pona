@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supported Languages</title>
+</head>
+<body>
+    <h1>Supported Languages</h1>
+    <table>
+        <tr>
+        <th>Linku language id</th>
+        <th>language (Endonym)</th>
+        <th>language (Toki Pona)</th>
+        <th>language (English)</th>
+        <th>overall completeness</th>
+        <th>nimi pu completeness</th>
+        <th>credits</th>
+    </tr>
+    {% for id, lang in langs.items() %}
+    <tr>
+        <td> {{ id }} </td>
+        <td> {{ lang.name_endonym }} </td>
+        <td> {{ lang.name_toki_pona }} </td>
+        <td> {{ lang.name_english }} </td>
+        <td> {{ lang.completeness_percent }}% </td>
+        <td> {{ lang.completeness_percent_pu }}% </td>
+        <td> {{ lang.credits }} </td>
+    </tr>
+    {% endfor %}
+    </table>
+    
+    
+</body>
+</html>

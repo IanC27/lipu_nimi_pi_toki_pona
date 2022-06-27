@@ -7,9 +7,8 @@ import argparse
 # shell for this code: https://code-maven.com/minimal-example-generating-html-with-python-jinja
 
 # parse args for language
-parser = argparse.ArgumentParser(description="create a Toki Pona dictionary mobu for use in kindles")
-parser.add_argument("-l", "--lang", help="the short code for the output language of the dictionary, as listed in the linku data")
-parser.add_argument("-h", "--help")
+parser = argparse.ArgumentParser(description="create a Toki Pona dictionary mobi for use in kindles")
+parser.add_argument("-l", "--lang", help="the short id for the output language of the dictionary, as listed in the linku data")
 
 response = requests.get("https://lipu-linku.github.io/jasima/data.json")
 linku = json.loads(response.content)
@@ -21,7 +20,7 @@ else:
     LANG_ID = args.lang
 
 if LANG_ID not in linku["languages"].keys():
-    print("Language not recognized. Be sure to use the correct language code.")
+    print("Language not recognized. Be sure to use the correct language id.")
     quit()
 
 
@@ -32,7 +31,8 @@ template = env.get_template("cover-template.html")
 
 # create cover from template
 # https://stackoverflow.com/questions/22181944/using-utf-8-characters-in-a-jinja2-template
-filename = os.path.join(root, "dict-files", "cover.html")
+filename = os.path.join(root, "dict-files", LANG_ID, "cover.html")
+os.makedirs(os.path.dirname(filename), exist_ok=True)
 with open(filename, 'wb') as fh:
     output = template.render(lang = linku["languages"][LANG_ID]["name_toki_pona"])
     fh.write(output.encode("utf-8"))
@@ -48,19 +48,23 @@ for word, data in linku["data"].items():
     defs[word] = bytes(defn, "utf-8").decode("utf-8", "ignore")
 
 template = env.get_template("content-template.html")
-filename = os.path.join(root, "dict-files", "content.html")
+filename = os.path.join(root, "dict-files", LANG_ID, "content.html")
 with open(filename, "wb") as fh:
     output = template.render(defs = defs)
     fh.write(output.encode("utf-8"))
 
+# create copyright/credits page
+template = env.get_template("copyright.html")
+filename = os.path.join(root, "dict-files", LANG_ID, "copyright.html")
+with open(filename, "w") as fh:
+    fh.write(template.render())
+
 # create opf file from template
 template = env.get_template("book-template.opf")
-filename = os.path.join(root, "dict-files", "tok-" + LANG_ID + ".opf")
+filename = os.path.join(root, "dict-files", LANG_ID, "tok-" + LANG_ID + ".opf")
 with open(filename, "w") as fh:
     fh.write(template.render(
         lang_tp = linku["languages"][LANG_ID]["name_toki_pona"],
         lang_id = LANG_ID
     ))
 
-# run kindlegen to create the mobi file using opf file
-subprocess.run([os.path.join(root, "kindlegen.exe"), filename])
