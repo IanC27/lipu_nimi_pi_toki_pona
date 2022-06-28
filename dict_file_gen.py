@@ -75,5 +75,6 @@ for LANG_ID in languages:
         ))
 
     # now compile the mobi file
-    subprocess.run(["kindlegen", filename])
+    if (os.path.exists("kindlegen.exe")):
+        subprocess.run(["kindlegen", filename])
 
