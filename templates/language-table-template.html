@@ -14,8 +14,7 @@
         <th>language (Endonym)</th>
         <th>language (Toki Pona)</th>
         <th>language (English)</th>
-        <th>overall completeness</th>
-        <th>nimi pu completeness</th>
+        <th>completeness by category</th>
         <th>credits</th>
     </tr>
     {% for id, lang in langs.items() %}
@@ -24,8 +23,11 @@
         <td> {{ lang.name_endonym }} </td>
         <td> {{ lang.name_toki_pona }} </td>
         <td> {{ lang.name_english }} </td>
-        <td> {{ lang.completeness_percent }}% </td>
-        <td> {{ lang.completeness_percent_pu }}% </td>
+        <td> 
+            {% for cat, per in lang.completeness_percent.items() %}
+                {{ cat }}: {{ per }}%, 
+            {% endfor %}
+        </td>
         <td> {{ lang.credits }} </td>
     </tr>
     {% endfor %}
